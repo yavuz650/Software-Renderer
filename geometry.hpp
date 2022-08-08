@@ -2,7 +2,9 @@
 #define __GEOMETRY_H__
 
 #include <cmath>
+#include <cassert>
 #include <ostream>
+#include <vector>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +35,7 @@ template <class t> struct Vec3 {
 	inline Vec3<t> operator -(const Vec3<t> &v) const { return Vec3<t>(x-v.x, y-v.y, z-v.z); }
 	inline Vec3<t> operator *(float f)          const { return Vec3<t>(x*f, y*f, z*f); }
 	inline t       operator *(const Vec3<t> &v) const { return x*v.x + y*v.y + z*v.z; }
+	inline t       operator [](int i) const {return raw[i];}
 	float norm () const { return std::sqrt(x*x+y*y+z*z); }
 	Vec3<t> & normalize(t l=1) { *this = (*this)*(l/norm()); return *this; }
 	template <class > friend std::ostream& operator<<(std::ostream& s, Vec3<t>& v);
@@ -52,5 +55,29 @@ template <class t> std::ostream& operator<<(std::ostream& s, Vec3<t>& v) {
 	s << "(" << v.x << ", " << v.y << ", " << v.z << ")\n";
 	return s;
 }
+
+//Matrix class
+
+
+const int DEFAULT_ALLOC=4;
+
+class Matrix {
+    std::vector<std::vector<float> > m;
+    int rows, cols;
+public:
+    Matrix(int r=DEFAULT_ALLOC, int c=DEFAULT_ALLOC);
+    int nrows() const;
+    int ncols() const;
+
+    static Matrix identity(int dimensions);
+    std::vector<float>& operator[](const int i);
+	const std::vector<float>& operator[](const int i) const;
+    Matrix operator*(const Matrix& a);
+    Matrix transpose();
+    Matrix inverse();
+
+    friend std::ostream& operator<<(std::ostream& s, Matrix& m);
+};
+
 
 #endif //__GEOMETRY_H__
