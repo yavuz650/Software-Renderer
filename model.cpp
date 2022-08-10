@@ -26,10 +26,8 @@ Model::Model(const char *filename) : verts_(), faces_(), uv_(),
       float temp;
       for (int i = 0; i < 3; i++)
       {
-        iss >> v.raw[i];
-        // if (i == 1)
-        //   temp = -temp;
-        //v.raw[i] = temp;
+        iss >> temp;
+        v.raw[i] = temp;
       }
       verts_.push_back(v);
     }
