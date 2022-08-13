@@ -356,18 +356,14 @@ int main(int argc, char **argv)
 
   std::array<Vec2f,3> uv;
   float x,y;
+  int angle;
   float r = 4.0;
-  x = r;
-  float delta = -0.05;
+  angle = 0;
+  int delta = 2;
   while(1){
-    y = sqrt(r*r-x*x);
-    if(delta < 0.f)
-        y=-y;
-
-    if(fabs(x+delta) > r){
-        delta = -delta;
-    }
-    x+=delta;
+    x = cos(angle * M_PI / 180);
+    y = sin(angle * M_PI / 180);
+    angle+=delta%360;
     Matrix projection = orthographic(-1,1,-1,1,1,-1);
     Matrix view = lookAt(Vec3f(x,0,y),Vec3f(0,0,0),Vec3f(0,1,0));
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
