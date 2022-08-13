@@ -237,23 +237,21 @@ void triangle(std::array<Vec3f, 3> vertices, std::vector<std::vector<float>> &zb
 
 void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
                           std::array<Vec2f,3> uv, TGAImage &texture,
-                          std::vector<std::vector<float>> &zbuffer)
+                          std::vector<std::vector<float>> &zbuffer, Matrix &projection,
+                          Matrix &view)
 {
-  Matrix projection = orthographic(-1,1,-1,1,1,-1);
-  Matrix view = lookAt(Vec3f(-1,1,-3),Vec3f(0,0,0),Vec3f(0,1,0));
-  Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
-  Matrix model = translate(Matrix::identity(4),Vec3f(0,0,-3));
+  // Matrix projection = orthographic(-1,1,-1,1,1,-1);
+  // Matrix view = lookAt(Vec3f(-1,1,-3),Vec3f(0,0,0),Vec3f(0,1,0));
+  // Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
+  // Matrix model = translate(Matrix::identity(4),Vec3f(0,0,-3));
 
   Vec4f temp;
   for (int i = 0; i < 3; i++)
   {
-    //std::cout << "Before\n" << vertices[i];
     temp = Vec4f(vertices[i], 1.0f);
     temp = projection*view*temp;
     vertices[i] = Vec3f(temp.x/temp.w,temp.y/temp.w,temp.z/temp.w);
-    //std::cout << "After\n" << vertices[i];
   }
-  //vertices[0] = Vec3f(temp.x,temp.y,temp.z)
   Vec3f normalVector = (vertices[0] - vertices[1])
                      ^ (vertices[2] - vertices[0]);
   normalVector.normalize();
@@ -357,30 +355,75 @@ int main(int argc, char **argv)
   texture.flip_vertically();
 
   std::array<Vec2f,3> uv;
-  for (int i = 0; i < model->nfaces(); i++)
-  {
-    std::vector<int> face = model->face(i);
-    std::vector<int> textureIdx = model->textureIdx(i);
-    std::array<Vec2f,3> uv;
-    for (int j = 0; j < 3; j++)
-    {
-      uv[j] = model->uv(textureIdx[j]);
+  float x,y;
+  float r = 4.0;
+  x = r;
+  float delta = -0.05;
+  while(1){
+    y = sqrt(r*r-x*x);
+    if(delta < 0.f)
+        y=-y;
+
+    if(fabs(x+delta) > r){
+        delta = -delta;
     }
+    x+=delta;
+    Matrix projection = orthographic(-1,1,-1,1,1,-1);
+    Matrix view = lookAt(Vec3f(x,0,y),Vec3f(0,0,0),Vec3f(0,1,0));
+    SDL_SetRenderDrawColor(renderer,0,0,0,255);
+    SDL_RenderClear(renderer);
+    //SDL_Delay(10);
+    for (int i = 0; i < WINDOW_WIDTH; i++)
+    {
+      std::fill(zbuffer[i].begin(), zbuffer[i].end(), -std::numeric_limits<float>::max());
+    }
+    for (int i = 0; i < model->nfaces(); i++)
+    {
+      std::vector<int> face = model->face(i);
+      std::vector<int> textureIdx = model->textureIdx(i);
+      std::array<Vec2f,3> uv;
+      for (int j = 0; j < 3; j++)
+      {
+        uv[j] = model->uv(textureIdx[j]);
+      }
 
-    interpolatedTriangle(std::array<Vec3f, 3>{model->vert(face[0]),
-                                  model->vert(face[1]),
-                                  model->vert(face[2])},
-                                  renderer, uv, texture,
-                                  zbuffer);
+      interpolatedTriangle(std::array<Vec3f, 3>{model->vert(face[0]),
+                                    model->vert(face[1]),
+                                    model->vert(face[2])},
+                                    renderer, uv, texture,
+                                    zbuffer,projection,view);
+    }
+      SDL_RenderPresent(renderer);
+      if (SDL_PollEvent(&event)){
+        if(event.type == SDL_QUIT || (event.type==SDL_WINDOWEVENT && event.window.event==SDL_WINDOWEVENT_CLOSE))
+          break;
+      }
   }
 
-  SDL_RenderPresent(renderer);
+  // for (int i = 0; i < model->nfaces(); i++)
+  // {
+  //   std::vector<int> face = model->face(i);
+  //   std::vector<int> textureIdx = model->textureIdx(i);
+  //   std::array<Vec2f,3> uv;
+  //   for (int j = 0; j < 3; j++)
+  //   {
+  //     uv[j] = model->uv(textureIdx[j]);
+  //   }
+
+  //   interpolatedTriangle(std::array<Vec3f, 3>{model->vert(face[0]),
+  //                                 model->vert(face[1]),
+  //                                 model->vert(face[2])},
+  //                                 renderer, uv, texture,
+  //                                 zbuffer);
+  // }
+
+  //SDL_RenderPresent(renderer);
   std::cout << "Finished rendering\n";
-  while (1)
-  {
-    if (SDL_PollEvent(&event) && event.type == SDL_QUIT)
-      break;
-  }
+  // while (1)
+  // {
+  //   if (SDL_PollEvent(&event) && event.type == SDL_QUIT)
+  //     break;
+  // }
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
