@@ -41,6 +41,7 @@ Vec3<T> worldToScreen(Vec3<T> v)
   return Vec3<T>((v.x + 1.) * WINDOW_WIDTH/2, (v.y + 1.) * WINDOW_HEIGHT/2, v.z);
 }
 
+//Returns the view matrix
 Matrix lookAt(Vec3f eye, Vec3f target, Vec3f up){
   Vec3f z = (eye-target).normalize();
   Vec3f x = (up^z).normalize();
@@ -60,7 +61,36 @@ Matrix lookAt(Vec3f eye, Vec3f target, Vec3f up){
   view[1][3] = -(y*eye);
   view[2][3] = -(z*eye);
   return view;
+}
 
+Matrix perspective(float d){
+  Matrix result = Matrix::identity(4);
+  result[3][3] = 0;
+  result[3][2] = -1.0/d;
+  return result;
+}
+
+Matrix orthographic(float l, float r, float b, float t, float n, float f){
+  //make sure the box is valid
+  assert(r!=l && t!=b && n!=f);
+  Matrix result = Matrix::identity(4);
+  result[0][0] = 2/(r-l);
+  result[1][1] = 2/(t-b);
+  result[2][2] = 2/(n-f);
+  result[0][3] = -(r+l)/(r-l);
+  result[1][3] = -(t+b)/(t-b);
+  result[2][3] = -(n+f)/(n-f);
+  return result;
+}
+
+Matrix viewport(int width, int height){
+  assert(width!=0 && height!=0);
+  Matrix result = Matrix::identity(4);
+  result[0][0] = width/2;
+  result[1][1] = height/2;
+  result[0][3] = (width-1)/2;
+  result[1][3] = (height-1)/2;
+  return result;
 }
 
 Matrix translate(Matrix const &m, Vec3f v)
@@ -209,12 +239,28 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
                           std::array<Vec2f,3> uv, TGAImage &texture,
                           std::vector<std::vector<float>> &zbuffer)
 {
+  Matrix projection = orthographic(-1,1,-1,1,1,-1);
+  Matrix view = lookAt(Vec3f(-1,1,-3),Vec3f(0,0,0),Vec3f(0,1,0));
+  Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
+  Matrix model = translate(Matrix::identity(4),Vec3f(0,0,-3));
+
+  Vec4f temp;
+  for (int i = 0; i < 3; i++)
+  {
+    //std::cout << "Before\n" << vertices[i];
+    temp = Vec4f(vertices[i], 1.0f);
+    temp = projection*view*temp;
+    vertices[i] = Vec3f(temp.x/temp.w,temp.y/temp.w,temp.z/temp.w);
+    //std::cout << "After\n" << vertices[i];
+  }
+  //vertices[0] = Vec3f(temp.x,temp.y,temp.z)
   Vec3f normalVector = (vertices[0] - vertices[1])
                      ^ (vertices[2] - vertices[0]);
   normalVector.normalize();
   float intensity = normalVector * lightDirection;
   if(intensity < 0)
     return;
+
   vertices[0] = worldToScreen(vertices[0]);
   vertices[1] = worldToScreen(vertices[1]);
   vertices[2] = worldToScreen(vertices[2]);
@@ -237,6 +283,8 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
   {
     for (P.y = bbox.BL().y; P.y <= bbox.TR().y; P.y++)
     {
+      // if(!(P.x >=0 && P.x <WINDOW_WIDTH && P.y >= 0 && P.y <WINDOW_HEIGHT))
+      //   return;
       if (isInsideTriangle(Vec2i(vertices[0].x,vertices[0].y),
                             Vec2i(vertices[1].x,vertices[1].y),
                             Vec2i(vertices[2].x,vertices[2].y),
@@ -323,7 +371,7 @@ int main(int argc, char **argv)
                                   model->vert(face[1]),
                                   model->vert(face[2])},
                                   renderer, uv, texture,
-                                  zbuffer);                
+                                  zbuffer);
   }
 
   SDL_RenderPresent(renderer);
