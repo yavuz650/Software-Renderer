@@ -242,7 +242,7 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
 {
   // Matrix projection = orthographic(-1,1,-1,1,1,-1);
   // Matrix view = lookAt(Vec3f(-1,1,-3),Vec3f(0,0,0),Vec3f(0,1,0));
-  // Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
+   Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
   // Matrix model = translate(Matrix::identity(4),Vec3f(0,0,-3));
 
   Vec4f temp;
@@ -259,9 +259,13 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
   if(intensity < 0)
     return;
 
-  vertices[0] = worldToScreen(vertices[0]);
-  vertices[1] = worldToScreen(vertices[1]);
-  vertices[2] = worldToScreen(vertices[2]);
+  vertices[0] = Vec3f(vp*Vec4f(vertices[0], 1.0f));
+  vertices[1] = Vec3f(vp*Vec4f(vertices[1], 1.0f));
+  vertices[2] = Vec3f(vp*Vec4f(vertices[2], 1.0f));
+
+  // vertices[0] = worldToScreen(vertices[0]);
+  // vertices[1] = worldToScreen(vertices[1]);
+  // vertices[2] = worldToScreen(vertices[2]);
   boundingBox bbox(Vec2f(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1), Vec2f(0, 0));
 
   for (int i = 0; i < 3; i++)
@@ -368,7 +372,6 @@ int main(int argc, char **argv)
     Matrix view = lookAt(Vec3f(x,0,y),Vec3f(0,0,0),Vec3f(0,1,0));
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
-    //SDL_Delay(10);
     for (int i = 0; i < WINDOW_WIDTH; i++)
     {
       std::fill(zbuffer[i].begin(), zbuffer[i].end(), -std::numeric_limits<float>::max());
