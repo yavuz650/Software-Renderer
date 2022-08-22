@@ -102,6 +102,8 @@ public:
     Matrix operator*(const Matrix& a);
 	template <class t> 
 	Vec4<t> operator*(const Vec4<t>& a);
+	template <class t> 
+	Vec3<t> operator*(const Vec3<t>& a);	
     Matrix transpose();
     Matrix inverse();
 
@@ -115,6 +117,15 @@ Vec4<t> Matrix::operator*(const Vec4<t>& a) {
   result.y = m[1][0] * a[0] + m[1][1] * a[1] + m[1][2] * a[2] + m[1][3] * a[3];
   result.z = m[2][0] * a[0] + m[2][1] * a[1] + m[2][2] * a[2] + m[2][3] * a[3];
   result.w = m[3][0] * a[0] + m[3][1] * a[1] + m[3][2] * a[2] + m[3][3] * a[3];
+  return result;
+}
+
+template<class t>
+Vec3<t> Matrix::operator*(const Vec3<t>& a) {
+  Vec3<t> result;
+  result.x = m[0][0] * a[0] + m[0][1] * a[1] + m[0][2] * a[2];
+  result.y = m[1][0] * a[0] + m[1][1] * a[1] + m[1][2] * a[2];
+  result.z = m[2][0] * a[0] + m[2][1] * a[1] + m[2][2] * a[2];
   return result;
 }
 #endif //__GEOMETRY_H__

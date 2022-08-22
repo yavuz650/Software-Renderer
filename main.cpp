@@ -242,26 +242,39 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
 {
   // Matrix projection = orthographic(-1,1,-1,1,1,-1);
   // Matrix view = lookAt(Vec3f(-1,1,-3),Vec3f(0,0,0),Vec3f(0,1,0));
-   Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
+  Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
+  Matrix M = projection*view;
+  Matrix N = Matrix::identity(4);
+  float m00 = M[0][0]; float m01 = M[0][1]; float m02 = M[0][2];
+  float m10 = M[1][0]; float m11 = M[1][1]; float m12 = M[1][2];
+  float m20 = M[2][0]; float m21 = M[2][1]; float m22 = M[2][2];
+  
+  N[0][0] = m11*m22-m12-m21; N[0][1] = m12*m20-m10*m22; N[0][0] = m10*m21-m11*m20;
+  N[1][0] = m02*m21-m01*m22; N[1][1] = m00*m22-m02*m20; N[1][2] = m01*m20-m00*m21;
+  N[2][0] = m01*m12-m02*m11; N[2][1] = m02*m10-m00*m12; N[2][2] = m00*m11-m01*m10;
   // Matrix model = translate(Matrix::identity(4),Vec3f(0,0,-3));
-
+  Vec3f normalVector = (vertices[0] - vertices[1])
+                     ^ (vertices[2] - vertices[0]);
+                      
   Vec4f temp;
   for (int i = 0; i < 3; i++)
   {
     temp = Vec4f(vertices[i], 1.0f);
-    temp = projection*view*temp;
+    temp = vp*M*temp;
     vertices[i] = Vec3f(temp.x/temp.w,temp.y/temp.w,temp.z/temp.w);
   }
-  Vec3f normalVector = (vertices[0] - vertices[1])
-                     ^ (vertices[2] - vertices[0]);
+  //temp = projection*view*Vec4f(normalVector,1.0);
+  normalVector = N*normalVector;
+
+
   normalVector.normalize();
   float intensity = normalVector * lightDirection;
   if(intensity < 0)
     return;
 
-  vertices[0] = Vec3f(vp*Vec4f(vertices[0], 1.0f));
-  vertices[1] = Vec3f(vp*Vec4f(vertices[1], 1.0f));
-  vertices[2] = Vec3f(vp*Vec4f(vertices[2], 1.0f));
+  // vertices[0] = Vec3f(vp*Vec4f(vertices[0], 1.0f));
+  // vertices[1] = Vec3f(vp*Vec4f(vertices[1], 1.0f));
+  // vertices[2] = Vec3f(vp*Vec4f(vertices[2], 1.0f));
 
   // vertices[0] = worldToScreen(vertices[0]);
   // vertices[1] = worldToScreen(vertices[1]);
