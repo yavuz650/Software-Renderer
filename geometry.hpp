@@ -59,6 +59,7 @@ template <class t> struct Vec4 {
 	inline t       operator [](int i) const {return raw[i];}
 	float norm () const { return std::sqrt(x*x+y*y+z*z+w*w); }
 	Vec4<t> & normalize(t l=1) { *this = (*this)*(l/norm()); return *this; }
+	inline Vec3<t> reduceTo3() { return Vec3<t>(x/w,y/w,z/w); }
 	template <class > friend std::ostream& operator<<(std::ostream& s, Vec4<t>& v);
 };
 

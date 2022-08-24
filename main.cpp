@@ -63,13 +63,6 @@ Matrix lookAt(Vec3f eye, Vec3f target, Vec3f up){
   return view;
 }
 
-Matrix perspective(float d){
-  Matrix result = Matrix::identity(4);
-  result[3][3] = 0;
-  result[3][2] = -1.0/d;
-  return result;
-}
-
 Matrix orthographic(float l, float r, float b, float t, float n, float f){
   //make sure the box is valid
   assert(r!=l && t!=b && n!=f);
@@ -80,6 +73,20 @@ Matrix orthographic(float l, float r, float b, float t, float n, float f){
   result[0][3] = -(r+l)/(r-l);
   result[1][3] = -(t+b)/(t-b);
   result[2][3] = -(n+f)/(n-f);
+  return result;
+}
+
+Matrix perspective(float l, float r, float b, float t, float n, float f){
+  //make sure the box is valid
+  assert(r!=l && t!=b && n!=f);  
+  Matrix result = Matrix::identity(4);
+  result[0][0] = n;
+  result[1][1] = n;
+  result[2][2] = n+f; 
+  result[2][3] = -f*n;
+  result[3][2] = 1;
+  result[3][3] = 0;
+  result = orthographic(l,r,b,t,n,f)*result;
   return result;
 }
 
@@ -243,30 +250,22 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
   // Matrix projection = orthographic(-1,1,-1,1,1,-1);
   // Matrix view = lookAt(Vec3f(-1,1,-3),Vec3f(0,0,0),Vec3f(0,1,0));
   Matrix vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
+  //Matrix model = translate(Matrix::identity(4),Vec3f(0,0,-3.0));
   Matrix M = projection*view;
-  Matrix N = Matrix::identity(4);
-  float m00 = M[0][0]; float m01 = M[0][1]; float m02 = M[0][2];
-  float m10 = M[1][0]; float m11 = M[1][1]; float m12 = M[1][2];
-  float m20 = M[2][0]; float m21 = M[2][1]; float m22 = M[2][2];
-  
-  N[0][0] = m11*m22-m12-m21; N[0][1] = m12*m20-m10*m22; N[0][0] = m10*m21-m11*m20;
-  N[1][0] = m02*m21-m01*m22; N[1][1] = m00*m22-m02*m20; N[1][2] = m01*m20-m00*m21;
-  N[2][0] = m01*m12-m02*m11; N[2][1] = m02*m10-m00*m12; N[2][2] = m00*m11-m01*m10;
-  // Matrix model = translate(Matrix::identity(4),Vec3f(0,0,-3));
-  Vec3f normalVector = (vertices[0] - vertices[1])
+  Matrix N = (M.inverse()).transpose();
+  Vec3f normalVector = (vertices[1] - vertices[2])
                      ^ (vertices[2] - vertices[0]);
-                      
+
   Vec4f temp;
   for (int i = 0; i < 3; i++)
   {
     temp = Vec4f(vertices[i], 1.0f);
     temp = vp*M*temp;
-    vertices[i] = Vec3f(temp.x/temp.w,temp.y/temp.w,temp.z/temp.w);
+    vertices[i] = temp.reduceTo3();
   }
-  //temp = projection*view*Vec4f(normalVector,1.0);
-  normalVector = N*normalVector;
-
-
+  temp = N*Vec4f(normalVector,0.0);
+  //normalVector = Vec3f(temp.x/temp.w,temp.y/temp.w,temp.z/temp.w);
+  normalVector = Vec3f(temp);
   normalVector.normalize();
   float intensity = normalVector * lightDirection;
   if(intensity < 0)
@@ -298,8 +297,8 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
   {
     for (P.y = bbox.BL().y; P.y <= bbox.TR().y; P.y++)
     {
-      // if(!(P.x >=0 && P.x <WINDOW_WIDTH && P.y >= 0 && P.y <WINDOW_HEIGHT))
-      //   return;
+      if(!(P.x >=0 && P.x <WINDOW_WIDTH && P.y >= 0 && P.y <WINDOW_HEIGHT))
+        return;
       if (isInsideTriangle(Vec2i(vertices[0].x,vertices[0].y),
                             Vec2i(vertices[1].x,vertices[1].y),
                             Vec2i(vertices[2].x,vertices[2].y),
@@ -351,7 +350,7 @@ void interpolatedTriangle(std::array<Vec3f, 3> vertices, SDL_Renderer *renderer,
 
 int main(int argc, char **argv)
 {
-  Model *model = new Model("obj/african_head.obj");
+  Model *model = new Model("/home/yavuz/Desktop/Software-Renderer/obj/african_head.obj");
   SDL_Event event;
   SDL_Renderer *renderer;
   SDL_Window *window;
@@ -381,8 +380,8 @@ int main(int argc, char **argv)
     x = cos(angle * M_PI / 180);
     y = sin(angle * M_PI / 180);
     angle+=delta%360;
-    Matrix projection = orthographic(-1,1,-1,1,1,-1);
-    Matrix view = lookAt(Vec3f(x,0,y),Vec3f(0,0,0),Vec3f(0,1,0));
+    Matrix projection = perspective(-1,1,-1,1,-2,-3);
+    Matrix view = lookAt(Vec3f(3*x,0,3*y),Vec3f(0,0,0),Vec3f(0,1,0));
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
     for (int i = 0; i < WINDOW_WIDTH; i++)
