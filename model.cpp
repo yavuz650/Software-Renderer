@@ -21,13 +21,13 @@ Model::Model(const char *filename) : verts_(), faces_(), uv_(),
     if (!line.compare(0, 2, "v "))
     {
       iss >> trash;
-      Vec3f v;
+      Vector3f v;
 
       float temp;
       for (int i = 0; i < 3; i++)
       {
         iss >> temp;
-        v.raw[i] = temp;
+        v[i] = temp;
       }
       verts_.push_back(v);
     }
@@ -54,7 +54,7 @@ Model::Model(const char *filename) : verts_(), faces_(), uv_(),
       float u,v;
       iss >> u >> v;
 
-      uv_.push_back(Vec2f(u,v));
+      uv_.push_back(Vector2f(u,v));
     }
   }
   
@@ -80,12 +80,12 @@ std::vector<int> Model::face(int idx)
   return faces_[idx];
 }
 
-Vec3f Model::vert(int i)
+Vector3f Model::vert(int i)
 {
   return verts_[i];
 }
 
-Vec2f Model::uv(int i)
+Vector2f Model::uv(int i)
 {
   return uv_[i];
 }
