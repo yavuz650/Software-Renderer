@@ -30,6 +30,49 @@ class boundingBox{
   }
 };
 
+class zbuffer{
+ private:
+  int screenWidth;
+  int screenHeight;
+  std::vector<std::vector<float>> buffer;
+ public:
+  zbuffer(int screenWidth_, int screenHeight_)
+      : screenWidth(screenWidth_),
+        screenHeight(screenHeight_),
+        buffer(screenWidth_, std::vector<float>(screenHeight_,
+               -std::numeric_limits<float>::max())) {}
+
+  void visualize(SDL_Renderer *renderer, int screenWidth, int screenHeight){
+    for(int i=0; i<screenWidth; i++){
+      for(int j=0; j<screenHeight; j++){
+        SDL_SetRenderDrawColor(renderer, buffer[i][j]*100,
+                                         buffer[i][j]*100,
+                                         buffer[i][j]*100, 255);
+        SDL_RenderDrawPoint(renderer, i, screenHeight-j);
+      }
+    }
+  }
+  float get(int x, int y) const{
+    return buffer[x][y];
+  }
+  void set(int x, int y, float f){
+    buffer[x][y] = f;
+  }
+  void resetBuffer(){
+    for (int i = 0; i < screenWidth; i++)
+    {
+      std::fill(buffer[i].begin(), buffer[i].end(), -std::numeric_limits<float>::max());
+    }
+  }
+  void printBuffer(){
+    for(int i=0; i<screenWidth; i++){
+      for(int j=0; j<screenHeight; j++){
+        std::cout << buffer[i][j] << "\n";
+      }
+    }
+  }
+};
+
 // template <class T>
 // Vec2<T> worldToScreen(Vec2<T> v)
 // {
@@ -81,11 +124,11 @@ Matrix4f orthographic(float l, float r, float b, float t, float n, float f){
 
 Matrix4f perspective(float l, float r, float b, float t, float n, float f){
   //make sure the box is valid
-  assert(r!=l && t!=b && n!=f);  
+  assert(r!=l && t!=b && n!=f);
   Matrix4f result = Matrix4f::Identity();
   result(0,0) = n;
   result(1,1) = n;
-  result(2,2) = n+f; 
+  result(2,2) = n+f;
   result(2,3) = -f*n;
   result(3,2) = 1;
   result(3,3) = 0;
@@ -247,7 +290,7 @@ Vector3f barycentricCoords(Vector2i A, Vector2i B, Vector2i C, Vector2i P)
 
 void interpolatedTriangle(std::array<Vector3f, 3> vertices, SDL_Renderer *renderer,
                           std::array<Vector2f,3> uv, TGAImage &texture,
-                          std::vector<std::vector<float>> &zbuffer, Matrix4f &projection,
+                          zbuffer &zBuffer, Matrix4f &projection,
                           Matrix4f &view)
 {
   // Matrix4f projection = orthographic(-1,1,-1,1,1,-1);
@@ -309,7 +352,7 @@ void interpolatedTriangle(std::array<Vector3f, 3> vertices, SDL_Renderer *render
         float A = normal(0) * (vertices[0](0) - P(0));
         float B = normal(1) * (vertices[0](1) - P(1));
         P(2) = A + B / normal(2) + vertices[0](2);
-        if (P(2) > zbuffer[P(0)][P(1)])
+        if (P(2) > zBuffer.get(P(0),P(1)))
         {
           //determine texture coordinates
           Vector3f barycentricCoords_ = barycentricCoords(Vector2i(vertices[0](0),vertices[0](1)), Vector2i(vertices[1](0),vertices[1](1)), Vector2i(vertices[2](0),vertices[2](1)), Vector2i(P(0),P(1)));
@@ -331,7 +374,7 @@ void interpolatedTriangle(std::array<Vector3f, 3> vertices, SDL_Renderer *render
                                            color[1]*1,
                                            color[0]*1, 255);
           SDL_RenderDrawPoint(renderer, P(0), WINDOW_HEIGHT-P(1)-1);
-          zbuffer[P(0)][P(1)] = P(2);
+          zBuffer.set(P(0),P(1),P(2));
         }
       }
     }
@@ -362,11 +405,7 @@ int main(int argc, char **argv)
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-  std::vector<std::vector<float>> zbuffer(WINDOW_WIDTH);
-  for (int i = 0; i < WINDOW_WIDTH; i++)
-  {
-    zbuffer[i].resize(WINDOW_HEIGHT, -std::numeric_limits<float>::max());
-  }
+  zbuffer zBuffer(WINDOW_WIDTH,WINDOW_HEIGHT);
 
   TGAImage texture;
   texture.read_tga_file("obj/african_head_diffuse.tga");
@@ -386,10 +425,7 @@ int main(int argc, char **argv)
     Matrix4f view = lookAt(Vector3f(3*x,0,3*y),Vector3f(0,0,0),Vector3f(0,1,0));
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
-    for (int i = 0; i < WINDOW_WIDTH; i++)
-    {
-      std::fill(zbuffer[i].begin(), zbuffer[i].end(), -std::numeric_limits<float>::max());
-    }
+    zBuffer.resetBuffer();
     for (int i = 0; i < model->nfaces(); i++)
     {
       std::vector<int> face = model->face(i);
@@ -404,8 +440,8 @@ int main(int argc, char **argv)
                                     model->vert(face[1]),
                                     model->vert(face[2])},
                                     renderer, uv, texture,
-                                    zbuffer,projection,view);
-    }    
+                                    zBuffer,projection,view);
+    }
       SDL_RenderPresent(renderer);
       if (SDL_PollEvent(&event)){
         if(event.type == SDL_QUIT || (event.type==SDL_WINDOWEVENT && event.window.event==SDL_WINDOWEVENT_CLOSE))
