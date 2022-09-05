@@ -2,7 +2,6 @@
 #define __MODEL_H__
 
 #include <vector>
-//#include "geometry.hpp"
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 
