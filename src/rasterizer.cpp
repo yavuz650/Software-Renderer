@@ -15,13 +15,16 @@ void Rasterizer::rasterize(std::vector<triangle> &triangles){
       bbox.BL()(0) = std::min(bbox.BL()(0), v[i](0));
       bbox.BL()(1) = std::min(bbox.BL()(1), v[i](1));
     }
-
+    bbox.TR()(0) = floorf(bbox.TR()(0));
+    bbox.TR()(1) = floorf(bbox.TR()(1));
+    bbox.BL()(0) = floorf(bbox.BL()(0));
+    bbox.BL()(1) = floorf(bbox.BL()(1));
     Vector3f P;
     for (P(0) = bbox.BL()(0); P(0) <= bbox.TR()(0); P(0)++){
       for (P(1) = bbox.BL()(1); P(1) <= bbox.TR()(1); P(1)++){
         if(!(P(0) >=0 && P(0) <WINDOW_WIDTH && P(1) >= 0 && P(1) <WINDOW_HEIGHT))
           continue;
-        if (triangles[i].isInsideTriangle(Vector2i(P(0), P(1)))){
+        if (triangles[i].isInsideTriangle(P)){
           triangles[i].createFragment(Vector2f(P(0), P(1)));
         }
       }

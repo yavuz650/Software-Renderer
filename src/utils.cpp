@@ -10,17 +10,6 @@ Matrix4f viewport(int width, int height){
   return result;
 }
 
-Vector3f barycentricCoords(Vector2i A, Vector2i B, Vector2i C, Vector2i P)
-{
-  Vector2i AB = B - A;
-  Vector2i AC = C - A;
-  Vector2i PA = A - P;
-
-  Vector3f u = Vector3f(AB(0), AC(0), PA(0)).cross(Vector3f(AB(1), AC(1), PA(1)));
-  u = Vector3f(u(0) / u(2), u(1) / u(2), u(2) / u(2));
-  return Vector3f(1-u(0)-u(1), u(0), u(1));
-}
-
 //Returns the view matrix
 Matrix4f lookAt(Vector3f eye, Vector3f target, Vector3f up){
   Vector3f z = (eye-target).normalized();

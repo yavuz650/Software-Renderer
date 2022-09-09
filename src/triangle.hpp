@@ -33,7 +33,8 @@ class triangle{
   void createFragment(Vector2f coords);
   std::vector<Vector2f>& getFragments();
   void transform(Matrix4f M, Matrix4f N, Matrix4f viewport);
-  bool isInsideTriangle(Vector2i P);
+  Vector3f barycentricCoords(Vector3f P);
+  bool isInsideTriangle(Vector3f P);
   Vector3f getNormal();
 };
 

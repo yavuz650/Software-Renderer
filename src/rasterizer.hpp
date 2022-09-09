@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <array>
+#include <cmath>
 #include <eigen3/Eigen/Core>
 #include "triangle.hpp"
 #include "utils.hpp"

@@ -73,18 +73,34 @@ void triangle::transform(Matrix4f M, Matrix4f N, Matrix4f viewport = Matrix4f::I
   }
 }
 
-bool triangle::isInsideTriangle(Vector2i P)
+Vector3f triangle::barycentricCoords(Vector3f P)
 {
-  Vector2i A = Vector2i(v[0](0), v[0](1));
-  Vector2i B = Vector2i(v[1](0), v[1](1));
-  Vector2i C = Vector2i(v[2](0), v[2](1));
-  Vector2i AB = B - A;
-  Vector2i AC = C - A;
-  Vector2i PA = A - P;
+  Vector3f a = v[0];
+  Vector3f b = v[1];
+  Vector3f c = v[2];
+  float alpha, beta, gamma;
+  float x = P(0);
+  float y = P(1);
+  float term0 = a(1)-b(1); //y_a - y_b
+  float term1 = b(0)-a(0); //x_b - x_a
+  float term2 = a(0)*b(1) - b(0)*a(1); //x_a*y_b - x_b*y_a
+  gamma = (term0*x + term1*y + term2) / (term0*c(0) + term1*c(1) + term2);
 
-  Vector3f u = (Vector3f(AB(0), AC(0), PA(0))).cross(Vector3f(AB(1), AC(1), PA(1)));
+  term0 = a(1)-c(1); //y_a - y_c
+  term1 = c(0)-a(0); //x_b - x_a
+  term2 = a(0)*c(1) - c(0)*a(1); //x_a*y_c - x_c*y_a
+  beta = (term0*x + term1*y + term2) / (term0*b(0) + term1*b(1) + term2);
+  alpha = 1.0 - beta - gamma;
+ 
+  return Vector3f(alpha, beta, gamma);
+}
 
-  return u(0) / u(2) >= 0. && u(1) / u(2) >= 0. && (u(0) / u(2) + u(1) / u(2)) <= 1.;
+bool triangle::isInsideTriangle(Vector3f P)
+{
+  Vector3f u = barycentricCoords(P);
+  return u(0) >= 0 && 
+         1.0f >= u(1) && u(1) >= 0 && 
+         1.0f >= u(2) && u(2) >= 0;
 }
 
 Vector3f triangle::getNormal(){

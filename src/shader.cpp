@@ -55,8 +55,7 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
       if (P(2) > zbuffer.get(P(0),P(1)))
       {
         //determine texture coordinates
-        Vector3f barycentricCoords_ = barycentricCoords(Vector2i(v[0](0),v[0](1)), Vector2i(v[1](0),v[1](1)), Vector2i(v[2](0),v[2](1)), Vector2i(P(0),P(1)));
-
+        Vector3f barycentricCoords_ = triangles[i].barycentricCoords(P);
         Vector2f interpolatedUv;
         interpolatedUv(0) = uv[0](0) * barycentricCoords_(0)
                         + uv[1](0) * barycentricCoords_(1)
