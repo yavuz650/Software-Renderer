@@ -5,9 +5,10 @@
 #include "SDL2/SDL.h"
 
 #include "tgaimage.hpp"
-#include "model.hpp"
 #include "rasterizer.hpp"
 #include "shader.hpp"
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.hpp"
 //#include "utils.hpp"
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
@@ -27,7 +28,23 @@ Vector3f lightDirection(0, 0, -1);
 
 int main(int argc, char **argv)
 {
-  Model *model = new Model("/home/yavuz/Desktop/Software-Renderer/obj/african_head.obj");
+  std::string inputFile = "obj/african_head.obj";
+  tinyobj::ObjReaderConfig reader_config;
+  tinyobj::ObjReader reader;
+
+  if (!reader.ParseFromFile(inputFile, reader_config)) {
+    if (!reader.Error().empty()) {
+      std::cerr << "TinyObjReader: " << reader.Error();
+    }
+    exit(1);
+  }
+  if (!reader.Warning().empty()) {
+    std::cout << "TinyObjReader: " << reader.Warning();
+  }
+
+  auto& attrib = reader.GetAttrib();
+  auto& shapes = reader.GetShapes();
+
   SDL_Event event;
   SDL_Renderer *renderer;
   SDL_Window *window;
@@ -42,19 +59,42 @@ int main(int argc, char **argv)
   Rasterizer rasterizer;
   FragmentShader fragShader;
   TGAImage texture;
-  texture.read_tga_file("/home/yavuz/Desktop/Software-Renderer/obj/african_head_diffuse.tga");
+  texture.read_tga_file("obj/african_head_diffuse.tga");
   texture.flip_vertically();
   std::vector<triangle> rawTriangles;
-  for (int i = 0; i < model->nfaces(); i++)
-  {
-    std::vector<int> face = model->face(i);
-    std::vector<int> textureIdx = model->textureIdx(i);
-    rawTriangles.emplace_back(triangle(model->vert(face[0]),
-                                       model->vert(face[1]),
-                                       model->vert(face[2]),
-                                       model->uv(textureIdx[0]),
-                                       model->uv(textureIdx[1]),
-                                       model->uv(textureIdx[2])));
+  // Loop over shapes
+  for (size_t s = 0; s < shapes.size(); s++) {
+    // Loop over faces(polygon)
+    size_t index_offset = 0;
+    for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+      size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+      std::array<Vertex,3> vertices;
+      // Loop over vertices in the face.
+      for (size_t v = 0; v < fv; v++) {
+        // access to vertex
+        float vx,vy,vz;
+        float nx,ny,nz;
+        float tx,ty;
+        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+        vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
+        vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
+        vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
+        // Check if `normal_index` is zero or positive. negative = no normal data
+        if (idx.normal_index >= 0) {
+          nx = attrib.normals[3*size_t(idx.normal_index)+0];
+          ny = attrib.normals[3*size_t(idx.normal_index)+1];
+          nz = attrib.normals[3*size_t(idx.normal_index)+2];
+        }
+        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
+        if (idx.texcoord_index >= 0) {
+          tx = attrib.texcoords[2*size_t(idx.texcoord_index)+0];
+          ty = attrib.texcoords[2*size_t(idx.texcoord_index)+1];
+        }
+        vertices[v] = Vertex(Vector3f(vx,vy,vz),Vector2f(tx,ty),Vector3f(nx,ny,nz));
+      }
+      rawTriangles.emplace_back(vertices);
+      index_offset += fv;
+    }
   }
 
   float x,y;
@@ -62,14 +102,15 @@ int main(int argc, char **argv)
   float r = 4.0;
   angle = 90;
   int delta = 2;
+  Matrix4f modelMatrix = translate(Matrix4f::Identity(),Vector3f(0,0,-3.0));
   while(1){
     x = cos(angle * M_PI / 180);
     y = sin(angle * M_PI / 180);
     angle+=delta%360;
-    Matrix4f projection = orthographic(-1,1,-1,1,1,-1);
-    Matrix4f view = lookAt(Vector3f(3*x,0,3*y),Vector3f(0,0,0),Vector3f(0,1,0));
+    Matrix4f projection = perspective(-1,1,-1,1,-2,-3);
+    Matrix4f view = lookAt(Vector3f(3*x,0,3*y-3),Vector3f(0,0,-3),Vector3f(0,1,0));
     Matrix4f vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
-    Matrix4f M = projection*view;
+    Matrix4f M = projection*view*modelMatrix;
     std::vector<triangle> triangles(rawTriangles);
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
@@ -80,17 +121,21 @@ int main(int argc, char **argv)
     //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
     // zBuffer.printBuffer();
     SDL_RenderPresent(renderer);
-    if (SDL_PollEvent(&event)){
-      if(event.type == SDL_QUIT || (event.type==SDL_WINDOWEVENT && event.window.
-      event==SDL_WINDOWEVENT_CLOSE))
-        break;
-    }
+    //SDL_RenderClear(renderer);
+    //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
+    //SDL_RenderPresent(renderer);
+    //while(1){
+      if (SDL_PollEvent(&event)){
+        if(event.type == SDL_QUIT || (event.type==SDL_WINDOWEVENT && event.window.
+        event==SDL_WINDOWEVENT_CLOSE))
+          break;
+      }
+    //}
   }
 
   std::cout << "Finished rendering\n";
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
-  delete model;
   return 0;
 }

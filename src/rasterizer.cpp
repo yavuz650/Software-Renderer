@@ -5,7 +5,11 @@ using namespace Eigen;
 
 void Rasterizer::rasterize(std::vector<triangle> &triangles){
   for (int i = 0; i < triangles.size(); i++){
-    std::array<Vector3f,3> v = triangles[i].getVertices();
+    std::array<Vertex,3> vertices = triangles[i].getVertices();
+    std::array<Vector3f,3> v;
+    v[0] = vertices[0].coords;
+    v[1] = vertices[1].coords;
+    v[2] = vertices[2].coords;
     boundingBox bbox(Vector2f(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1), Vector2f(0, 0));
     for (int i = 0; i < 3; i++)
     {

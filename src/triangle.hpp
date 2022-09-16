@@ -11,25 +11,34 @@
 
 using namespace Eigen;
 
+class Vertex{
+ public:
+  //Vertex coordinates
+  Vector3f coords;
+  //Texture coordinates
+  Vector2f uv;
+  Vector3f normal;
+  Vertex();
+  Vertex(Vector3f coords_);
+  Vertex(Vector3f coords_,
+         Vector2f uv_);
+  Vertex(Vector3f coords_,
+         Vector2f uv_,
+         Vector3f normal_);
+};
+
 class triangle{
  private:
-  //Vertices
-  std::array<Vector3f,3> v;
-  //Texture coordinates
-  std::array<Vector2f,3> uv;
-  //Surface normal
-  Vector3f normal;
+  std::array<Vertex,3> v;
   std::vector<Vector2f> fragments;
   Vector3f calculateNormal();
+  Vector3f surfaceNormal;
  public:
-  Vector3f calculateNormal2();
   triangle();
-  triangle(Vector3f v0, Vector3f v1, Vector3f v2);
-  triangle(Vector3f v0, Vector3f v1, Vector3f v2,
-           Vector2f uv0, Vector2f uv1, Vector2f uv2);
-  triangle(std::array<Vector3f, 3> v_, std::array<Vector2f, 3> uv_);
-  std::array<Vector3f,3> getVertices();
-  std::array<Vector2f,3> getUv();
+  triangle(Vertex v0, Vertex v1, Vertex v2);
+  triangle(std::array<Vertex,3> v);
+  std::array<Vertex,3> getVertices();
+  //std::array<Vector2f,3> getUv();
   void createFragment(Vector2f coords);
   std::vector<Vector2f>& getFragments();
   void transform(Matrix4f M, Matrix4f N, Matrix4f viewport);
