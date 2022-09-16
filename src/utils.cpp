@@ -49,13 +49,14 @@ Matrix4f perspective(float l, float r, float b, float t, float n, float f){
   //make sure the box is valid
   assert(r!=l && t!=b && n!=f);
   Matrix4f result = Matrix4f::Identity();
-  result(0,0) = n;
-  result(1,1) = n;
-  result(2,2) = n+f;
-  result(2,3) = -f*n;
+  result(0,0) = 2*n/(r-l);
+  result(0,2) = (l+r)/(l-r);
+  result(1,1) = 2*n/(t-b);
+  result(1,2) = (b+t)/(b-t);
+  result(2,2) = (f+n)/(n-f);
+  result(2,3) = 2*f*n/(f-n);
   result(3,2) = 1;
   result(3,3) = 0;
-  result = orthographic(l,r,b,t,n,f)*result;
   return result;
 }
 
@@ -88,9 +89,9 @@ ZBuffer::ZBuffer(int screenWidth_, int screenHeight_)
 void ZBuffer::visualize(SDL_Renderer *renderer, int screenWidth, int screenHeight){
   for(int i=0; i<screenWidth; i++){
     for(int j=0; j<screenHeight; j++){
-      SDL_SetRenderDrawColor(renderer, buffer[i][j]*10,
-                                        buffer[i][j]*10,
-                                        buffer[i][j]*10, 255);
+      SDL_SetRenderDrawColor(renderer, buffer[i][j]*0.1,
+                                        buffer[i][j]*0.1,
+                                        buffer[i][j]*0.1, 255);
       SDL_RenderDrawPoint(renderer, i, screenHeight-j);
     }
   }
