@@ -6,7 +6,7 @@ Vertex::Vertex(Vector3f coords_,
                Vector2f uv_) : coords(coords_), uv(uv_) {}
 Vertex::Vertex(Vector3f coords_,
                Vector2f uv_,
-               Vector3f normal_) : coords(coords_), uv(uv_), normalInView(normal_) {}
+               Vector3f normal_) : coords(coords_), uv(uv_), normal(normal_) {}
 
 
 Vector3f triangle::calculateNormal(){
@@ -45,27 +45,24 @@ std::vector<Vector2f>& triangle::getFragments(){
   return fragments;
 }
 
-void triangle::transform(Matrix4f modelView, Matrix4f projectionViewport,
-                         Matrix4f invModelView) {
+void triangle::transform(Matrix4f M, Matrix4f N, Matrix4f viewport = Matrix4f::Identity()){
   Vector4f temp;
   for (int i = 0; i < 3; i++)
   {
     Vertex vert(v[i]);
     //Transform the vertex
     temp = Vector4f(vert.coords(0), vert.coords(1), vert.coords(2), 1.0f);
-    temp = modelView*temp;
-    v[i].vertPosInView = Vector3f(temp(0)/temp(3),temp(1)/temp(3),temp(2)/temp(3));
-    temp = projectionViewport*temp;
+    temp = viewport*M*temp;
     v[i].coords = Vector3f(temp(0)/temp(3),temp(1)/temp(3),temp(2)/temp(3));
     //Transform the normal vector
-    temp = Vector4f(vert.normalInView(0),vert.normalInView(1),vert.normalInView(2),0);
-    temp = invModelView*temp;
-    v[i].normalInView = Vector3f(temp(0),temp(1),temp(2));
+    temp = Vector4f(vert.normal(0),vert.normal(1),vert.normal(2),0);
+    temp = N*temp;
+    v[i].normal = Vector3f(temp(0),temp(1),temp(2));
   }
   //Transform the surface normal vector
-  // temp = Vector4f(surfaceNormal(0),surfaceNormal(1),surfaceNormal(2),0);
-  // temp = N*temp;
-  // surfaceNormal = Vector3f(temp(0),temp(1),temp(2));
+  temp = Vector4f(surfaceNormal(0),surfaceNormal(1),surfaceNormal(2),0);
+  temp = N*temp;
+  surfaceNormal = Vector3f(temp(0),temp(1),temp(2));  
 }
 
 Vector3f triangle::barycentricCoords(Vector3f P)

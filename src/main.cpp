@@ -61,9 +61,6 @@ int main(int argc, char **argv)
   TGAImage texture;
   texture.read_tga_file("obj/african_head_diffuse.tga");
   texture.flip_vertically();
-  TGAImage specularMap;
-  specularMap.read_tga_file("obj/african_head_spec.tga");
-  texture.flip_vertically();
   std::vector<triangle> rawTriangles;
   // Loop over shapes
   for (size_t s = 0; s < shapes.size(); s++) {
@@ -105,38 +102,36 @@ int main(int argc, char **argv)
   float r = 4.0;
   angle = 90;
   int delta = 2;
-  Vector3f lightDir(0,0,-1);
   Matrix4f modelMatrix = translate(Matrix4f::Identity(),Vector3f(0,0,-3.0));
-  //while(1){
+  while(1){
     x = cos(angle * M_PI / 180);
     y = sin(angle * M_PI / 180);
     angle+=delta%360;
     Matrix4f projection = perspective(-1,1,-1,1,-2,-3);
-    //Matrix4f view = lookAt(Vector3f(3*x,0,3*y-3),Vector3f(0,0,-3),Vector3f(0,1,0));
-    Matrix4f view = lookAt(Vector3f(1,1.5,0),Vector3f(0,0,-3),Vector3f(0,1,0));
+    Matrix4f view = lookAt(Vector3f(3*x,0,3*y-3),Vector3f(0,0,-3),Vector3f(0,1,0));
     Matrix4f vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
     Matrix4f M = projection*view*modelMatrix;
     std::vector<triangle> triangles(rawTriangles);
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
     zBuffer.resetBuffer();
-    vertShader.shade(triangles,modelMatrix,view,projection,vp,lightDir,1);
+    vertShader.shade(triangles,M,vp);
     rasterizer.rasterize(triangles);
-    fragShader.shade(triangles,zBuffer,texture,specularMap,renderer,lightDir);
+    fragShader.shade(triangles,zBuffer,texture,renderer,Vector3f(0,0,-1.0));
     //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
     // zBuffer.printBuffer();
     SDL_RenderPresent(renderer);
     //SDL_RenderClear(renderer);
     //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
     //SDL_RenderPresent(renderer);
-    while(1){
+    //while(1){
       if (SDL_PollEvent(&event)){
         if(event.type == SDL_QUIT || (event.type==SDL_WINDOWEVENT && event.window.
         event==SDL_WINDOWEVENT_CLOSE))
           break;
       }
-    }
- // }
+    //}
+  }
 
   std::cout << "Finished rendering\n";
   SDL_DestroyRenderer(renderer);

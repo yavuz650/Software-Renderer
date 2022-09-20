@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <array>
-#include <algorithm>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include "SDL2/SDL.h"
@@ -20,15 +19,18 @@ class VertexShader{
 
  public:
   VertexShader();
-  void shade(std::vector<triangle> &triangles, Matrix4f model, Matrix4f view,
-             Matrix4f projection, Matrix4f viewport, Vector3f &lightDir,
-             bool doBackfaceCulling);
+  void shade(std::vector<triangle> &triangles,
+             Matrix4f MVP,
+             Matrix4f viewport,
+             bool doBackfaceCulling=1);
 };
 
 class FragmentShader{
  public:
-  void shade(std::vector<triangle> &triangles, ZBuffer &zbuffer,
-             TGAImage &texture, TGAImage &specularMap, SDL_Renderer *renderer,
+  void shade(std::vector<triangle> &triangles,
+             ZBuffer &zbuffer,
+             TGAImage &texture,
+             SDL_Renderer *renderer,
              Vector3f lightDir);
 };
 
