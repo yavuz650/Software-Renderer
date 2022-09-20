@@ -17,7 +17,10 @@ class Vertex{
   Vector3f coords;
   //Texture coordinates
   Vector2f uv;
-  Vector3f normal;
+  //Normal vector in view space
+  Vector3f normalInView;
+  //Vertex position in view space. Used in specular lighting calculation
+  Vector3f vertPosInView;
   Vertex();
   Vertex(Vector3f coords_);
   Vertex(Vector3f coords_,
@@ -41,7 +44,8 @@ class triangle{
   //std::array<Vector2f,3> getUv();
   void createFragment(Vector2f coords);
   std::vector<Vector2f>& getFragments();
-  void transform(Matrix4f M, Matrix4f N, Matrix4f viewport);
+  void transform(Matrix4f modelView, Matrix4f projectionViewport,
+                 Matrix4f invModelView);
   Vector3f barycentricCoords(Vector3f P);
   bool isInsideTriangle(Vector3f P);
   Vector3f getNormal();
