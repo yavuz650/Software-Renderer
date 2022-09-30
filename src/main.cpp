@@ -103,11 +103,13 @@ int main(int argc, char **argv)
   angle = 90;
   int delta = 2;
   Matrix4f modelMatrix = translate(Matrix4f::Identity(),Vector3f(0,0,-3.0));
+  
   while(1){
+    Vector3f lightDir = Vector3f(0,0,-1.f);
     x = cos(angle * M_PI / 180);
     y = sin(angle * M_PI / 180);
     angle+=delta%360;
-    Matrix4f projection = perspective(-1,1,-1,1,-2,-3);
+    Matrix4f projection = perspective(-1,1,-1,1,-2,-4);
     Matrix4f view = lookAt(Vector3f(3*x,0,3*y-3),Vector3f(0,0,-3),Vector3f(0,1,0));
     Matrix4f vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
     Matrix4f M = projection*view*modelMatrix;
@@ -115,9 +117,9 @@ int main(int argc, char **argv)
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
     zBuffer.resetBuffer();
-    vertShader.shade(triangles,M,vp);
+    vertShader.shade(triangles,modelMatrix,view,projection,vp);
     rasterizer.rasterize(triangles);
-    fragShader.shade(triangles,zBuffer,texture,renderer,Vector3f(0,0,-1.0));
+    fragShader.shade(triangles,zBuffer,texture,renderer,lightDir);
     //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
     // zBuffer.printBuffer();
     SDL_RenderPresent(renderer);

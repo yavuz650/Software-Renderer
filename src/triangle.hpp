@@ -14,10 +14,11 @@ using namespace Eigen;
 class Vertex{
  public:
   //Vertex coordinates
-  Vector3f coords;
+  Vector4f coords;
   //Texture coordinates
   Vector2f uv;
   Vector3f normal;
+  Vector3f fragPos;
   Vertex();
   Vertex(Vector3f coords_);
   Vertex(Vector3f coords_,
@@ -41,7 +42,7 @@ class triangle{
   //std::array<Vector2f,3> getUv();
   void createFragment(Vector2f coords);
   std::vector<Vector2f>& getFragments();
-  void transform(Matrix4f M, Matrix4f N, Matrix4f viewport);
+  void transform(Matrix4f model, Matrix4f view, Matrix4f projection, Matrix4f viewport);
   Vector3f barycentricCoords(Vector3f P);
   bool isInsideTriangle(Vector3f P);
   Vector3f getNormal();

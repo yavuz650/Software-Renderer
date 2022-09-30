@@ -6,7 +6,7 @@ using namespace Eigen;
 void Rasterizer::rasterize(std::vector<triangle> &triangles){
   for (int i = 0; i < triangles.size(); i++){
     std::array<Vertex,3> vertices = triangles[i].getVertices();
-    std::array<Vector3f,3> v;
+    std::array<Vector4f,3> v;
     v[0] = vertices[0].coords;
     v[1] = vertices[1].coords;
     v[2] = vertices[2].coords;

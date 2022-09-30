@@ -12,18 +12,20 @@ bool VertexShader::isBackface(triangle t){
 VertexShader::VertexShader() : lookDir(Vector3f(0,0,-1.0)) {}
 
 void VertexShader::shade(std::vector<triangle> &triangles,
-                         Matrix4f MVP,
+                         Matrix4f model,
+                         Matrix4f view,
+                         Matrix4f projection,
                          Matrix4f viewport,
                          bool doBackfaceCulling){
 #ifndef NDEBUG
   std::cout << "Vertex Shader...\n"
             << "  Initial # of triangles: " << triangles.size() << std::endl;
 #endif
-  Matrix4f N = (MVP.inverse()).transpose();
+  //Matrix4f N = (MVP.inverse()).transpose();
   if(doBackfaceCulling){
     for (auto it=triangles.begin(); it!=triangles.end();)
     {
-      it->transform(MVP,N,viewport);
+      it->transform(model,view,projection,viewport);
       if(isBackface(*it))
         it=triangles.erase(it);
       else
@@ -54,9 +56,10 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
     //float intensity = normal.dot(lightDir);
     std::vector<Vector2f> fragments = triangles[i].getFragments();
     std::array<Vertex,3> vertices = triangles[i].getVertices();
-    std::array<Vector3f,3> v;
+    std::array<Vector4f,3> v;
     std::array<Vector2f,3> uv;
     std::array<Vector3f,3> n;
+    std::array<Vector3f,3> fragPoses;
     v[0] = vertices[0].coords;
     v[1] = vertices[1].coords;
     v[2] = vertices[2].coords;
@@ -66,10 +69,20 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
     n[0] = vertices[0].normal;
     n[1] = vertices[1].normal;
     n[2] = vertices[2].normal;
+    fragPoses[0] = vertices[0].fragPos;
+    fragPoses[1] = vertices[1].fragPos;
+    fragPoses[2] = vertices[2].fragPos;
     for (int j = 0; j < fragments.size(); j++)
     {
       Vector3f P(fragments[j](0), fragments[j](1), 0);
       Vector3f barycentricCoords_ = triangles[i].barycentricCoords(P);
+      //Perspective correct barycentric coordinates
+      float denom = barycentricCoords_(0) * v[0](3) +
+                    barycentricCoords_(1) * v[1](3) +
+                    barycentricCoords_(2) * v[2](3);
+      barycentricCoords_(0) = barycentricCoords_(0)*v[0](3)/denom;
+      barycentricCoords_(1) = barycentricCoords_(1)*v[1](3)/denom;
+      barycentricCoords_(2) = barycentricCoords_(2)*v[2](3)/denom; 
       P(2) = v[0](2) * barycentricCoords_(0)
            + v[1](2) * barycentricCoords_(1)
            + v[2](2) * barycentricCoords_(2);
@@ -86,9 +99,27 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
                     n[1](2) * barycentricCoords_(1) +
                     n[2](2) * barycentricCoords_(2);
         normal.normalize();
-        float intensity = normal.dot(lightDir);
-        if(intensity < 0.f)
-          continue;
+        Vector3f fragPos;
+        fragPos(0) = fragPoses[0](0) * barycentricCoords_(0) +
+                    fragPoses[1](0) * barycentricCoords_(1) +
+                    fragPoses[2](0) * barycentricCoords_(2);
+        fragPos(1) = fragPoses[0](1) * barycentricCoords_(0) +
+                    fragPoses[1](1) * barycentricCoords_(1) +
+                    fragPoses[2](1) * barycentricCoords_(2);
+        fragPos(2) = fragPoses[0](2) * barycentricCoords_(0) +
+                    fragPoses[1](2) * barycentricCoords_(1) +
+                    fragPoses[2](2) * barycentricCoords_(2);            
+        Vector3f realLightDir = Vector3f(lightDir-fragPos);
+        realLightDir.normalize();
+        float intensity = std::max<float>(normal.dot(realLightDir),0.f);
+        //if(intensity > 0)
+          
+        //if(intensity < 0.f)
+        //  continue;
+    
+        // Vector3f viewVec = -fragPos;
+        // Vector3f halfVec = (lightDir+fragPos).normalized();
+        //float spec = std::max<float>(normal.dot(halfVec),0);
         //determine texture coordinates
         Vector2f interpolatedUv;
         interpolatedUv(0) = uv[0](0) * barycentricCoords_(0)

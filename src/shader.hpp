@@ -20,9 +20,11 @@ class VertexShader{
  public:
   VertexShader();
   void shade(std::vector<triangle> &triangles,
-             Matrix4f MVP,
-             Matrix4f viewport,
-             bool doBackfaceCulling=1);
+                         Matrix4f model,
+                         Matrix4f view,
+                         Matrix4f projection,
+                         Matrix4f viewport,
+                         bool doBackfaceCulling=1);
 };
 
 class FragmentShader{

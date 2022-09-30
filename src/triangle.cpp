@@ -1,16 +1,20 @@
 #include "triangle.hpp"
 
 Vertex::Vertex() {}
-Vertex::Vertex(Vector3f coords_) : coords(coords_) {}
-Vertex::Vertex(Vector3f coords_,
-               Vector2f uv_) : coords(coords_), uv(uv_) {}
-Vertex::Vertex(Vector3f coords_,
-               Vector2f uv_,
-               Vector3f normal_) : coords(coords_), uv(uv_), normal(normal_) {}
-
+Vertex::Vertex(Vector3f coords_)
+    : coords(Vector4f(coords_(0), coords_(1), coords_(2), 1)) {}
+Vertex::Vertex(Vector3f coords_, Vector2f uv_)
+    : coords(Vector4f(coords_(0), coords_(1), coords_(2), 1)), uv(uv_) {}
+Vertex::Vertex(Vector3f coords_, Vector2f uv_, Vector3f normal_)
+    : coords(Vector4f(coords_(0), coords_(1), coords_(2), 1)),
+      uv(uv_),
+      normal(normal_) {}
 
 Vector3f triangle::calculateNormal(){
-  return (v[0].coords-v[2].coords).cross((v[1].coords-v[0].coords));
+  Vector3f v0(v[0].coords(0),v[0].coords(1),v[0].coords(2));
+  Vector3f v1(v[1].coords(0),v[1].coords(1),v[1].coords(2));
+  Vector3f v2(v[2].coords(0),v[2].coords(1),v[2].coords(2));
+  return (v0-v2).cross(v1-v0);
 }
 
 Vector3f triangle::getNormal(){
@@ -45,31 +49,54 @@ std::vector<Vector2f>& triangle::getFragments(){
   return fragments;
 }
 
-void triangle::transform(Matrix4f M, Matrix4f N, Matrix4f viewport = Matrix4f::Identity()){
+void triangle::transform(Matrix4f model, Matrix4f view, Matrix4f projection,
+                         Matrix4f viewport) {
   Vector4f temp;
+  Matrix4f MVP = projection*view*model;
+  Matrix4f MV = view*model;
   for (int i = 0; i < 3; i++)
   {
     Vertex vert(v[i]);
     //Transform the vertex
-    temp = Vector4f(vert.coords(0), vert.coords(1), vert.coords(2), 1.0f);
-    temp = viewport*M*temp;
-    v[i].coords = Vector3f(temp(0)/temp(3),temp(1)/temp(3),temp(2)/temp(3));
+    //temp = Vector4f(vert.coords(0), vert.coords(1), vert.coords(2), 1.0f);
+    //temp = view*model*temp;
+    //printf("Initial %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
+    v[i].coords = view*model*v[i].coords;
+    //printf("After viewmodel %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
+    v[i].fragPos = Vector3f(v[i].coords(0) / v[i].coords(3),
+                            v[i].coords(1) / v[i].coords(3),
+                            v[i].coords(2) / v[i].coords(3));
+    //v[i].fragPos = Vector3f(temp(0)/temp(3),temp(1)/temp(3),temp(2)/temp(3)); 
+    //temp = viewport*projection*temp;
+    //v[i].coords = Vector3f(temp(0)/temp(3),temp(1)/temp(3),temp(2)/temp(3));
+    v[i].coords = projection * v[i].coords;
+    //printf("after projection %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
+
+    //printf("After division %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
+    v[i].coords = viewport * v[i].coords;
+    v[i].coords = Vector4f(v[i].coords(0) / v[i].coords(3),
+                           v[i].coords(1) / v[i].coords(3),
+                           v[i].coords(2) / v[i].coords(3), 1/v[i].coords(3)); 
+    //printf("after viewport %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));    
+
     //Transform the normal vector
     temp = Vector4f(vert.normal(0),vert.normal(1),vert.normal(2),0);
-    temp = N*temp;
+    temp = MV.inverse().transpose()*temp;
     v[i].normal = Vector3f(temp(0),temp(1),temp(2));
   }
   //Transform the surface normal vector
   temp = Vector4f(surfaceNormal(0),surfaceNormal(1),surfaceNormal(2),0);
-  temp = N*temp;
-  surfaceNormal = Vector3f(temp(0),temp(1),temp(2));  
+  temp = MVP.inverse().transpose()*temp;
+  surfaceNormal = Vector3f(temp(0),temp(1),temp(2));
 }
 
 Vector3f triangle::barycentricCoords(Vector3f P)
 {
-  Vector3f a = v[0].coords;
-  Vector3f b = v[1].coords;
-  Vector3f c = v[2].coords;
+  Vector3f a(v[0].coords(0),v[0].coords(1),v[0].coords(2));
+  Vector3f b(v[1].coords(0),v[1].coords(1),v[1].coords(2));
+  Vector3f c(v[2].coords(0),v[2].coords(1),v[2].coords(2));
+  //Vector3f b = v[1].coords;
+  //Vector3f c = v[2].coords;
   float alpha, beta, gamma;
   float x = P(0);
   float y = P(1);
