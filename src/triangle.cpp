@@ -57,32 +57,20 @@ void triangle::transform(Matrix4f model, Matrix4f view, Matrix4f projection,
   for (int i = 0; i < 3; i++)
   {
     Vertex vert(v[i]);
-    //Transform the vertex
-    //temp = Vector4f(vert.coords(0), vert.coords(1), vert.coords(2), 1.0f);
-    //temp = view*model*temp;
-    //printf("Initial %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
     v[i].coords = view*model*v[i].coords;
-    //printf("After viewmodel %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
     v[i].fragPos = Vector3f(v[i].coords(0) / v[i].coords(3),
                             v[i].coords(1) / v[i].coords(3),
                             v[i].coords(2) / v[i].coords(3));
-    //v[i].fragPos = Vector3f(temp(0)/temp(3),temp(1)/temp(3),temp(2)/temp(3)); 
-    //temp = viewport*projection*temp;
-    //v[i].coords = Vector3f(temp(0)/temp(3),temp(1)/temp(3),temp(2)/temp(3));
-    v[i].coords = projection * v[i].coords;
-    //printf("after projection %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
 
-    //printf("After division %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));
+    v[i].coords = projection * v[i].coords;
     v[i].coords = viewport * v[i].coords;
     v[i].coords = Vector4f(v[i].coords(0) / v[i].coords(3),
                            v[i].coords(1) / v[i].coords(3),
-                           v[i].coords(2) / v[i].coords(3), 1/v[i].coords(3)); 
-    //printf("after viewport %f %f %f %f\n",v[i].coords(0),v[i].coords(1),v[i].coords(2),v[i].coords(3));    
-
+                           v[i].coords(2) / v[i].coords(3), 1/v[i].coords(3));
     //Transform the normal vector
     temp = Vector4f(vert.normal(0),vert.normal(1),vert.normal(2),0);
     temp = MV.inverse().transpose()*temp;
-    v[i].normal = Vector3f(temp(0),temp(1),temp(2));
+    v[i].normal = -Vector3f(temp(0),temp(1),temp(2));
   }
   //Transform the surface normal vector
   temp = Vector4f(surfaceNormal(0),surfaceNormal(1),surfaceNormal(2),0);
@@ -95,8 +83,6 @@ Vector3f triangle::barycentricCoords(Vector3f P)
   Vector3f a(v[0].coords(0),v[0].coords(1),v[0].coords(2));
   Vector3f b(v[1].coords(0),v[1].coords(1),v[1].coords(2));
   Vector3f c(v[2].coords(0),v[2].coords(1),v[2].coords(2));
-  //Vector3f b = v[1].coords;
-  //Vector3f c = v[2].coords;
   float alpha, beta, gamma;
   float x = P(0);
   float y = P(1);

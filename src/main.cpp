@@ -132,8 +132,8 @@ int main(int argc, char **argv)
         event==SDL_WINDOWEVENT_CLOSE))
           break;
       }
-    //}
-  }
+    }
+  //}
 
   std::cout << "Finished rendering\n";
   SDL_DestroyRenderer(renderer);

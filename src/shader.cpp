@@ -3,7 +3,8 @@
 #define WINDOW_WIDTH 1024
 
 bool VertexShader::isBackface(triangle t){
-  Vector3f normalVector = t.getNormal().normalized();
+  //Vector3f normalVector = t.getNormal().normalized();
+  Vector3f normalVector = -t.calculateNormal();
   if(normalVector.dot(lookDir) < 0)
     return true;
   return false;
@@ -82,7 +83,7 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
                     barycentricCoords_(2) * v[2](3);
       barycentricCoords_(0) = barycentricCoords_(0)*v[0](3)/denom;
       barycentricCoords_(1) = barycentricCoords_(1)*v[1](3)/denom;
-      barycentricCoords_(2) = barycentricCoords_(2)*v[2](3)/denom; 
+      barycentricCoords_(2) = barycentricCoords_(2)*v[2](3)/denom;
       P(2) = v[0](2) * barycentricCoords_(0)
            + v[1](2) * barycentricCoords_(1)
            + v[2](2) * barycentricCoords_(2);
@@ -108,15 +109,8 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
                     fragPoses[2](1) * barycentricCoords_(2);
         fragPos(2) = fragPoses[0](2) * barycentricCoords_(0) +
                     fragPoses[1](2) * barycentricCoords_(1) +
-                    fragPoses[2](2) * barycentricCoords_(2);            
-        Vector3f realLightDir = Vector3f(lightDir-fragPos);
-        realLightDir.normalize();
-        float intensity = std::max<float>(normal.dot(realLightDir),0.f);
-        //if(intensity > 0)
-          
-        //if(intensity < 0.f)
-        //  continue;
-    
+                    fragPoses[2](2) * barycentricCoords_(2);
+        float intensity = std::max<float>(normal.dot(lightDir),0.f);
         // Vector3f viewVec = -fragPos;
         // Vector3f halfVec = (lightDir+fragPos).normalized();
         //float spec = std::max<float>(normal.dot(halfVec),0);
