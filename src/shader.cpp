@@ -44,6 +44,7 @@ void VertexShader::shade(std::vector<triangle> &triangles,
 void FragmentShader::shade(std::vector<triangle> &triangles,
                       ZBuffer &zbuffer,
                       TGAImage &texture,
+                      TGAImage &specularMap,
                       SDL_Renderer *renderer,
                       Vector3f lightDir){
 #ifndef NDEBUG
@@ -111,9 +112,6 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
                     fragPoses[1](2) * barycentricCoords_(1) +
                     fragPoses[2](2) * barycentricCoords_(2);
         float intensity = std::max<float>(normal.dot(lightDir),0.f);
-        // Vector3f viewVec = -fragPos;
-        // Vector3f halfVec = (lightDir+fragPos).normalized();
-        //float spec = std::max<float>(normal.dot(halfVec),0);
         //determine texture coordinates
         Vector2f interpolatedUv;
         interpolatedUv(0) = uv[0](0) * barycentricCoords_(0)
@@ -123,13 +121,20 @@ void FragmentShader::shade(std::vector<triangle> &triangles,
         interpolatedUv(1) = uv[0](1) * barycentricCoords_(0)
                         + uv[1](1) * barycentricCoords_(1)
                         + uv[2](1) * barycentricCoords_(2);
-
+        float exp = specularMap.get(interpolatedUv(0) * texture.width(),
+                                    interpolatedUv(1) * texture.height())[0] / 1.f;
+        Vector3f viewVec = -fragPos;
+        Vector3f halfVec = (lightDir+fragPos).normalized();
+        float specBase = std::max<float>(normal.dot(halfVec),0);
+        float specular = pow(specBase,exp);
         TGAColor color = texture.get(interpolatedUv(0) * texture.width(),
                                     interpolatedUv(1) * texture.height());
 
-        SDL_SetRenderDrawColor(renderer, intensity*color[2],
-                                        intensity*color[1],
-                                        intensity*color[0], 255);
+        SDL_SetRenderDrawColor(
+            renderer,
+            std::min<float>((intensity + 0.6 * specular) * color[2], 255),
+            std::min<float>((intensity + 0.6 * specular) * color[1], 255), 
+            std::min<float>((intensity + 0.6 * specular) * color[0], 255), 255);
         SDL_RenderDrawPoint(renderer, P(0), WINDOW_HEIGHT-P(1)-1);
         zbuffer.set(P(0),P(1),P(2));
       }

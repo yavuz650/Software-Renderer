@@ -32,6 +32,7 @@ class FragmentShader{
   void shade(std::vector<triangle> &triangles,
              ZBuffer &zbuffer,
              TGAImage &texture,
+             TGAImage &specularMap,
              SDL_Renderer *renderer,
              Vector3f lightDir);
 };

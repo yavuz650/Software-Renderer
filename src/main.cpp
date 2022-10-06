@@ -61,6 +61,9 @@ int main(int argc, char **argv)
   TGAImage texture;
   texture.read_tga_file("obj/african_head_diffuse.tga");
   texture.flip_vertically();
+  TGAImage specularMap;
+  specularMap.read_tga_file("obj/african_head_spec.tga");
+  specularMap.flip_vertically();
   std::vector<triangle> rawTriangles;
   // Loop over shapes
   for (size_t s = 0; s < shapes.size(); s++) {
@@ -119,7 +122,7 @@ int main(int argc, char **argv)
     zBuffer.resetBuffer();
     vertShader.shade(triangles,modelMatrix,view,projection,vp);
     rasterizer.rasterize(triangles);
-    fragShader.shade(triangles,zBuffer,texture,renderer,lightDir);
+    fragShader.shade(triangles,zBuffer,texture,specularMap,renderer,lightDir);
     //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
     // zBuffer.printBuffer();
     SDL_RenderPresent(renderer);
