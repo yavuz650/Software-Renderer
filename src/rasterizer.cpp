@@ -33,5 +33,8 @@ void Rasterizer::rasterize(std::vector<triangle> &triangles){
         }
       }
     }
+#ifndef NDEBUG
+  std::cout << "Generated " << triangles[i].getFragments().size() << " fragments\n";
+#endif    
   }
 }

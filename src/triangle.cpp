@@ -1,15 +1,5 @@
 #include "triangle.hpp"
 
-Vertex::Vertex() {}
-Vertex::Vertex(Vector3f coords_)
-    : coords(Vector4f(coords_(0), coords_(1), coords_(2), 1)) {}
-Vertex::Vertex(Vector3f coords_, Vector2f uv_)
-    : coords(Vector4f(coords_(0), coords_(1), coords_(2), 1)), uv(uv_) {}
-Vertex::Vertex(Vector3f coords_, Vector2f uv_, Vector3f normal_)
-    : coords(Vector4f(coords_(0), coords_(1), coords_(2), 1)),
-      uv(uv_),
-      normal(normal_) {}
-
 Vector3f triangle::calculateNormal(){
   Vector3f v0(v[0].coords(0),v[0].coords(1),v[0].coords(2));
   Vector3f v1(v[1].coords(0),v[1].coords(1),v[1].coords(2));
@@ -37,9 +27,7 @@ triangle::triangle(std::array<Vertex,3> v_){
   surfaceNormal = calculateNormal();
 }
 
-std::array<Vertex,3> triangle::getVertices(){
-  return v;
-}
+std::array<Vertex, 3>& triangle::getVertices() { return v; }
 
 void triangle::createFragment(Vector2f coords){
   fragments.push_back(coords);
@@ -47,35 +35,6 @@ void triangle::createFragment(Vector2f coords){
 
 std::vector<Vector2f>& triangle::getFragments(){
   return fragments;
-}
-
-void triangle::transform(Matrix4f model, Matrix4f view, Matrix4f projection,
-                         Matrix4f viewport) {
-  Vector4f temp;
-  Matrix4f MVP = projection*view*model;
-  Matrix4f MV = view*model;
-  for (int i = 0; i < 3; i++)
-  {
-    Vertex vert(v[i]);
-    v[i].coords = view*model*v[i].coords;
-    v[i].fragPos = Vector3f(v[i].coords(0) / v[i].coords(3),
-                            v[i].coords(1) / v[i].coords(3),
-                            v[i].coords(2) / v[i].coords(3));
-
-    v[i].coords = projection * v[i].coords;
-    v[i].coords = viewport * v[i].coords;
-    v[i].coords = Vector4f(v[i].coords(0) / v[i].coords(3),
-                           v[i].coords(1) / v[i].coords(3),
-                           v[i].coords(2) / v[i].coords(3), 1/v[i].coords(3));
-    //Transform the normal vector
-    temp = Vector4f(vert.normal(0),vert.normal(1),vert.normal(2),0);
-    temp = MV.inverse().transpose()*temp;
-    v[i].normal = -Vector3f(temp(0),temp(1),temp(2));
-  }
-  //Transform the surface normal vector
-  temp = Vector4f(surfaceNormal(0),surfaceNormal(1),surfaceNormal(2),0);
-  temp = MVP.inverse().transpose()*temp;
-  surfaceNormal = Vector3f(temp(0),temp(1),temp(2));
 }
 
 Vector3f triangle::barycentricCoords(Vector3f P)
@@ -107,3 +66,10 @@ bool triangle::isInsideTriangle(Vector3f P)
          1.0f >= u(1) && u(1) >= 0 &&
          1.0f >= u(2) && u(2) >= 0;
 }
+
+bool triangle::isBackface(){
+  Vector3f normalVector = -calculateNormal();
+  if(normalVector.dot(Vector3f(0,0,-1.0f)) < 0)
+    return true;
+  return false;
+}  

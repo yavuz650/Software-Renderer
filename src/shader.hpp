@@ -12,29 +12,26 @@
 
 using namespace Eigen;
 
-class VertexShader{
- private:
-  Vector3f lookDir;
-  bool isBackface(triangle t);
-
+class Shader{
  public:
-  VertexShader();
-  void shade(std::vector<triangle> &triangles,
-                         Matrix4f model,
-                         Matrix4f view,
-                         Matrix4f projection,
-                         Matrix4f viewport,
-                         bool doBackfaceCulling=1);
+  virtual void vertexShader(std::vector<triangle> &input) =0;
+  virtual void fragmentShader(std::vector<triangle> &input, ZBuffer zbuffer,
+                              SDL_Renderer *renderer) = 0;
+
+  virtual ~Shader() {}
 };
 
-class FragmentShader{
+class HeadShader : public Shader{
  public:
-  void shade(std::vector<triangle> &triangles,
-             ZBuffer &zbuffer,
-             TGAImage &texture,
-             TGAImage &specularMap,
-             SDL_Renderer *renderer,
-             Vector3f lightDir);
+  Matrix4f model, view, projection, viewport;
+  TGAImage diffuseMap;
+  TGAImage specularMap;
+  SDL_Renderer *renderer;
+  Vector3f lightDir;
+  
+  void vertexShader(std::vector<triangle> &input) override;
+  void fragmentShader(std::vector<triangle> &input, ZBuffer zbuffer,
+                      SDL_Renderer *renderer) override;
 };
 
 #endif

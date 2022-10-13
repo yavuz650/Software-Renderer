@@ -13,19 +13,12 @@ using namespace Eigen;
 
 class Vertex{
  public:
-  //Vertex coordinates
+  //All vertices must have coordinates, everything else is optional.
   Vector4f coords;
-  //Texture coordinates
-  Vector2f uv;
-  Vector3f normal;
-  Vector3f fragPos;
-  Vertex();
-  Vertex(Vector3f coords_);
-  Vertex(Vector3f coords_,
-         Vector2f uv_);
-  Vertex(Vector3f coords_,
-         Vector2f uv_,
-         Vector3f normal_);
+  //Optional attributes (normal vector, UV coordinates etc.)
+  std::vector<Vector4f> vec4f;
+  std::vector<Vector3f> vec3f;
+  std::vector<Vector2f> vec2f;
 };
 
 class triangle{
@@ -38,14 +31,13 @@ class triangle{
   triangle();
   triangle(Vertex v0, Vertex v1, Vertex v2);
   triangle(std::array<Vertex,3> v);
-  std::array<Vertex,3> getVertices();
-  //std::array<Vector2f,3> getUv();
+  std::array<Vertex,3> &getVertices();
   void createFragment(Vector2f coords);
   std::vector<Vector2f>& getFragments();
-  void transform(Matrix4f model, Matrix4f view, Matrix4f projection, Matrix4f viewport);
   Vector3f barycentricCoords(Vector3f P);
   bool isInsideTriangle(Vector3f P);
   Vector3f getNormal();
+  bool isBackface();
 };
 
 #endif

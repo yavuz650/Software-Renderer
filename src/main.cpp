@@ -7,6 +7,7 @@
 #include "tgaimage.hpp"
 #include "rasterizer.hpp"
 #include "shader.hpp"
+#include "graphicsPipeline.hpp"
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.hpp"
 //#include "utils.hpp"
@@ -54,10 +55,12 @@ int main(int argc, char **argv)
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-  ZBuffer zBuffer(WINDOW_WIDTH,WINDOW_HEIGHT);
-  VertexShader vertShader;
-  Rasterizer rasterizer;
-  FragmentShader fragShader;
+  std::shared_ptr<Shader> headShader = std::make_shared<HeadShader>();
+  //The shader object does not belong to the graphics pipeline.
+  //It is the user's responsibility to make sure the pointer in the pipeline
+  //points to a valid shader object.
+  GraphicsPipeline myPipe(WINDOW_WIDTH, WINDOW_HEIGHT,
+                          std::shared_ptr<Shader>(headShader));
   TGAImage texture;
   texture.read_tga_file("obj/african_head_diffuse.tga");
   texture.flip_vertically();
@@ -93,20 +96,25 @@ int main(int argc, char **argv)
           tx = attrib.texcoords[2*size_t(idx.texcoord_index)+0];
           ty = attrib.texcoords[2*size_t(idx.texcoord_index)+1];
         }
-        vertices[v] = Vertex(Vector3f(vx,vy,vz),Vector2f(tx,ty),Vector3f(nx,ny,nz));
+        Vertex tmp;
+        tmp.coords = Vector4f(vx,vy,vz,1.0f);
+        tmp.vec2f.push_back(Vector2f(tx,ty));
+        tmp.vec3f.push_back(Vector3f(nx,ny,nz));
+        vertices[v] = tmp;
       }
       rawTriangles.emplace_back(vertices);
       index_offset += fv;
     }
   }
-
+  std::static_pointer_cast<HeadShader>(headShader)->diffuseMap = texture;
+  std::static_pointer_cast<HeadShader>(headShader)->specularMap = specularMap;
+  std::static_pointer_cast<HeadShader>(headShader)->lightDir = Vector3f(0,0,-1.f);
   float x,y;
   int angle;
   float r = 4.0;
   angle = 90;
   int delta = 2;
   Matrix4f modelMatrix = translate(Matrix4f::Identity(),Vector3f(0,0,-3.0));
-  
   while(1){
     Vector3f lightDir = Vector3f(0,0,-1.f);
     x = cos(angle * M_PI / 180);
@@ -116,19 +124,12 @@ int main(int argc, char **argv)
     Matrix4f view = lookAt(Vector3f(3*x,0,3*y-3),Vector3f(0,0,-3),Vector3f(0,1,0));
     Matrix4f vp = viewport(WINDOW_HEIGHT, WINDOW_WIDTH);
     Matrix4f M = projection*view*modelMatrix;
+    std::static_pointer_cast<HeadShader>(headShader)->model = modelMatrix;
+    std::static_pointer_cast<HeadShader>(headShader)->view = view;
+    std::static_pointer_cast<HeadShader>(headShader)->projection = projection;
+    std::static_pointer_cast<HeadShader>(headShader)->viewport = vp;
     std::vector<triangle> triangles(rawTriangles);
-    SDL_SetRenderDrawColor(renderer,0,0,0,255);
-    SDL_RenderClear(renderer);
-    zBuffer.resetBuffer();
-    vertShader.shade(triangles,modelMatrix,view,projection,vp);
-    rasterizer.rasterize(triangles);
-    fragShader.shade(triangles,zBuffer,texture,specularMap,renderer,lightDir);
-    //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
-    // zBuffer.printBuffer();
-    SDL_RenderPresent(renderer);
-    //SDL_RenderClear(renderer);
-    //zBuffer.visualize(renderer,WINDOW_WIDTH,WINDOW_HEIGHT);
-    //SDL_RenderPresent(renderer);
+    myPipe.draw(triangles,renderer);
     //while(1){
       if (SDL_PollEvent(&event)){
         if(event.type == SDL_QUIT || (event.type==SDL_WINDOWEVENT && event.window.
