@@ -5,7 +5,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # add the executable
-add_executable(main main.cpp tgaimage.cpp rasterizer.cpp shader.cpp 
+add_executable(main main.cpp tgaimage.cpp rasterizer.cpp shader.cpp
                triangle.cpp utils.cpp graphicsPipeline.cpp)
 
 target_link_libraries(main SDL2)

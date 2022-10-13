@@ -2,7 +2,7 @@
 #define WINDOW_HEIGHT 1024
 #define WINDOW_WIDTH 1024
 
-void HeadShader::vertexShader(std::vector<triangle> &input){
+void HeadShader::vertexShader(std::vector<Triangle> &input){
 #ifndef NDEBUG
   std::cout << "Vertex Shader...\n"
             << "  Initial # of triangles: " << input.size() << std::endl;
@@ -27,7 +27,7 @@ void HeadShader::vertexShader(std::vector<triangle> &input){
         coords = viewport * coords;
         coords = Vector4f(coords(0) / coords(3), coords(1) / coords(3),
                           coords(2) / coords(3), 1 / coords(3));
-        
+
         //Transform the normal vector
         temp = Vector4f(normal(0),normal(1),normal(2),0);
         temp = MV.inverse().transpose()*temp;
@@ -52,7 +52,7 @@ void HeadShader::vertexShader(std::vector<triangle> &input){
 #endif
 }
 
-void HeadShader::fragmentShader(std::vector<triangle> &input, ZBuffer zbuffer,
+void HeadShader::fragmentShader(std::vector<Triangle> &input, DepthBuffer zbuffer,
                                 SDL_Renderer *renderer) {
 #ifndef NDEBUG
   std::cout << "Fragment Shader...\n"

@@ -79,14 +79,14 @@ Vector2f& boundingBox::TR(){
   return topRight;
 }
 
-ZBuffer::ZBuffer(int screenWidth_, int screenHeight_)
+DepthBuffer::DepthBuffer(int screenWidth_, int screenHeight_)
     : screenWidth(screenWidth_),
       screenHeight(screenHeight_),
       buffer(screenWidth_,
              std::vector<float>(screenHeight_,
                                 -std::numeric_limits<float>::max())) {}
 
-void ZBuffer::visualize(SDL_Renderer *renderer, int screenWidth, int screenHeight){
+void DepthBuffer::visualize(SDL_Renderer *renderer, int screenWidth, int screenHeight){
   for(int i=0; i<screenWidth; i++){
     for(int j=0; j<screenHeight; j++){
       SDL_SetRenderDrawColor(renderer, buffer[i][j]*0.1,
@@ -96,19 +96,19 @@ void ZBuffer::visualize(SDL_Renderer *renderer, int screenWidth, int screenHeigh
     }
   }
 }
-float ZBuffer::get(int x, int y) const{
+float DepthBuffer::get(int x, int y) const{
   return buffer[x][y];
 }
-void ZBuffer::set(int x, int y, float f){
+void DepthBuffer::set(int x, int y, float f){
   buffer[x][y] = f;
 }
-void ZBuffer::resetBuffer(){
+void DepthBuffer::resetBuffer(){
   for (int i = 0; i < screenWidth; i++)
   {
     std::fill(buffer[i].begin(), buffer[i].end(), -std::numeric_limits<float>::max());
   }
 }
-void ZBuffer::printBuffer(){
+void DepthBuffer::printBuffer(){
   for(int i=0; i<screenWidth; i++){
     for(int j=0; j<screenHeight; j++){
       std::cout << buffer[i][j] << "\n";

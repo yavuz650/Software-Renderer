@@ -21,16 +21,16 @@ class Vertex{
   std::vector<Vector2f> vec2f;
 };
 
-class triangle{
+class Triangle{
  private:
   std::array<Vertex,3> v;
   std::vector<Vector2f> fragments;
   Vector3f surfaceNormal;
  public:
   Vector3f calculateNormal();
-  triangle();
-  triangle(Vertex v0, Vertex v1, Vertex v2);
-  triangle(std::array<Vertex,3> v);
+  Triangle();
+  Triangle(Vertex v0, Vertex v1, Vertex v2);
+  Triangle(std::array<Vertex,3> v);
   std::array<Vertex,3> &getVertices();
   void createFragment(Vector2f coords);
   std::vector<Vector2f>& getFragments();

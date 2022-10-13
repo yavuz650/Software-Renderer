@@ -12,7 +12,7 @@ using namespace Eigen;
 
 class Rasterizer{
  public:
-  void rasterize(std::vector<triangle> &triangles);
+  void rasterize(std::vector<Triangle> &triangles);
 };
 
 #endif

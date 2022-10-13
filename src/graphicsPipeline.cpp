@@ -7,7 +7,7 @@ GraphicsPipeline::GraphicsPipeline(int screenWidth_, int screenHeight_,
       shader(shader_),
       zbuffer(screenWidth_, screenHeight_) {}
 
-void GraphicsPipeline::draw(std::vector<triangle> &input, SDL_Renderer *renderer){
+void GraphicsPipeline::draw(std::vector<Triangle> &input, SDL_Renderer *renderer){
   zbuffer.resetBuffer();
   SDL_SetRenderDrawColor(renderer,0,0,0,255);
   SDL_RenderClear(renderer);

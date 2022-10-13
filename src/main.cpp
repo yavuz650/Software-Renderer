@@ -67,7 +67,7 @@ int main(int argc, char **argv)
   TGAImage specularMap;
   specularMap.read_tga_file("obj/african_head_spec.tga");
   specularMap.flip_vertically();
-  std::vector<triangle> rawTriangles;
+  std::vector<Triangle> rawTriangles;
   // Loop over shapes
   for (size_t s = 0; s < shapes.size(); s++) {
     // Loop over faces(polygon)
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
     std::static_pointer_cast<HeadShader>(headShader)->view = view;
     std::static_pointer_cast<HeadShader>(headShader)->projection = projection;
     std::static_pointer_cast<HeadShader>(headShader)->viewport = vp;
-    std::vector<triangle> triangles(rawTriangles);
+    std::vector<Triangle> triangles(rawTriangles);
     myPipe.draw(triangles,renderer);
     //while(1){
       if (SDL_PollEvent(&event)){

@@ -3,7 +3,7 @@
 #define WINDOW_WIDTH 1024
 using namespace Eigen;
 
-void Rasterizer::rasterize(std::vector<triangle> &triangles){
+void Rasterizer::rasterize(std::vector<Triangle> &triangles){
   for (int i = 0; i < triangles.size(); i++){
     std::array<Vertex,3> vertices = triangles[i].getVertices();
     std::array<Vector4f,3> v;
@@ -35,6 +35,6 @@ void Rasterizer::rasterize(std::vector<triangle> &triangles){
     }
 #ifndef NDEBUG
   std::cout << "Generated " << triangles[i].getFragments().size() << " fragments\n";
-#endif    
+#endif
   }
 }

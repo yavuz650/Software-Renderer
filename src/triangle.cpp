@@ -1,43 +1,43 @@
 #include "triangle.hpp"
 
-Vector3f triangle::calculateNormal(){
+Vector3f Triangle::calculateNormal(){
   Vector3f v0(v[0].coords(0),v[0].coords(1),v[0].coords(2));
   Vector3f v1(v[1].coords(0),v[1].coords(1),v[1].coords(2));
   Vector3f v2(v[2].coords(0),v[2].coords(1),v[2].coords(2));
   return (v0-v2).cross(v1-v0);
 }
 
-Vector3f triangle::getNormal(){
+Vector3f Triangle::getNormal(){
   return surfaceNormal;
 }
 
-triangle::triangle() {}
+Triangle::Triangle() {}
 
-triangle::triangle(Vertex v0, Vertex v1, Vertex v2){
+Triangle::Triangle(Vertex v0, Vertex v1, Vertex v2){
   v[0] = v0;
   v[1] = v1;
   v[2] = v2;
   surfaceNormal = calculateNormal();
 }
 
-triangle::triangle(std::array<Vertex,3> v_){
+Triangle::Triangle(std::array<Vertex,3> v_){
   v[0] = v_[0];
   v[1] = v_[1];
   v[2] = v_[2];
   surfaceNormal = calculateNormal();
 }
 
-std::array<Vertex, 3>& triangle::getVertices() { return v; }
+std::array<Vertex, 3>& Triangle::getVertices() { return v; }
 
-void triangle::createFragment(Vector2f coords){
+void Triangle::createFragment(Vector2f coords){
   fragments.push_back(coords);
 }
 
-std::vector<Vector2f>& triangle::getFragments(){
+std::vector<Vector2f>& Triangle::getFragments(){
   return fragments;
 }
 
-Vector3f triangle::barycentricCoords(Vector3f P)
+Vector3f Triangle::barycentricCoords(Vector3f P)
 {
   Vector3f a(v[0].coords(0),v[0].coords(1),v[0].coords(2));
   Vector3f b(v[1].coords(0),v[1].coords(1),v[1].coords(2));
@@ -59,7 +59,7 @@ Vector3f triangle::barycentricCoords(Vector3f P)
   return Vector3f(alpha, beta, gamma);
 }
 
-bool triangle::isInsideTriangle(Vector3f P)
+bool Triangle::isInsideTriangle(Vector3f P)
 {
   Vector3f u = barycentricCoords(P);
   return u(0) >= 0 &&
@@ -67,9 +67,9 @@ bool triangle::isInsideTriangle(Vector3f P)
          1.0f >= u(2) && u(2) >= 0;
 }
 
-bool triangle::isBackface(){
+bool Triangle::isBackface(){
   Vector3f normalVector = -calculateNormal();
   if(normalVector.dot(Vector3f(0,0,-1.0f)) < 0)
     return true;
   return false;
-}  
+}

@@ -14,8 +14,8 @@ using namespace Eigen;
 
 class Shader{
  public:
-  virtual void vertexShader(std::vector<triangle> &input) =0;
-  virtual void fragmentShader(std::vector<triangle> &input, ZBuffer zbuffer,
+  virtual void vertexShader(std::vector<Triangle> &input) =0;
+  virtual void fragmentShader(std::vector<Triangle> &input, DepthBuffer zbuffer,
                               SDL_Renderer *renderer) = 0;
 
   virtual ~Shader() {}
@@ -28,9 +28,9 @@ class HeadShader : public Shader{
   TGAImage specularMap;
   SDL_Renderer *renderer;
   Vector3f lightDir;
-  
-  void vertexShader(std::vector<triangle> &input) override;
-  void fragmentShader(std::vector<triangle> &input, ZBuffer zbuffer,
+
+  void vertexShader(std::vector<Triangle> &input) override;
+  void fragmentShader(std::vector<Triangle> &input, DepthBuffer zbuffer,
                       SDL_Renderer *renderer) override;
 };
 

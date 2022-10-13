@@ -12,13 +12,13 @@ class GraphicsPipeline {
   int screenHeight;
   std::shared_ptr<Shader> shader;
   Rasterizer rasterizer;
-  ZBuffer zbuffer;
+  DepthBuffer zbuffer;
   bool doBackfaceCulling;
 
  public:
   GraphicsPipeline(int screenWidth_, int screenHeight_,
                    std::shared_ptr<Shader> shader_);
-  void draw(std::vector<triangle> &input, SDL_Renderer *renderer);
+  void draw(std::vector<Triangle> &input, SDL_Renderer *renderer);
 };
 
 #endif

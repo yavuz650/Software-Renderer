@@ -41,13 +41,13 @@ class boundingBox{
   //     bboxBottomRight.x,bboxBottomRight.y, renderer, color);
 };
 
-class ZBuffer{
+class DepthBuffer{
  private:
   int screenWidth;
   int screenHeight;
   std::vector<std::vector<float>> buffer;
  public:
-  ZBuffer(int screenWidth_, int screenHeight_);
+  DepthBuffer(int screenWidth_, int screenHeight_);
 
   void visualize(SDL_Renderer *renderer, int screenWidth, int screenHeight);
   float get(int x, int y) const;
