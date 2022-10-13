@@ -1,27 +1,28 @@
 #ifndef SHADER_HPP_
 #define SHADER_HPP_
 
-#include <vector>
 #include <array>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
+#include <vector>
+
 #include "SDL2/SDL.h"
-#include "triangle.hpp"
 #include "tgaimage.hpp"
+#include "triangle.hpp"
 #include "utils.hpp"
 
 using namespace Eigen;
 
-class Shader{
+class Shader {
  public:
-  virtual void vertexShader(std::vector<Triangle> &input) =0;
+  virtual void vertexShader(std::vector<Triangle> &input) = 0;
   virtual void fragmentShader(std::vector<Triangle> &input, DepthBuffer zbuffer,
                               SDL_Renderer *renderer) = 0;
 
   virtual ~Shader() {}
 };
 
-class HeadShader : public Shader{
+class HeadShader : public Shader {
  public:
   Matrix4f model, view, projection, viewport;
   TGAImage diffuseMap;
